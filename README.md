@@ -1,45 +1,75 @@
-# Coinbase Wallet Mobile SDK
+# coinbase_wallet_sdk
 
-[![Cocoapods](https://img.shields.io/cocoapods/v/CoinbaseWalletSDK)](https://cocoapods.org/pods/CoinbaseWalletSDK)
-[![Maven](https://img.shields.io/maven-central/v/com.coinbase/coinbase-wallet-sdk?label=maven)](https://mavenlibs.com/maven/dependency/com.coinbase/coinbase-wallet-sdk)
-[![npm](https://img.shields.io/npm/v/@coinbase/wallet-mobile-sdk)](https://www.npmjs.com/package/@coinbase/wallet-mobile-sdk)
-[![pub.dev](https://img.shields.io/pub/v/coinbase_wallet_sdk)](https://pub.dev/packages/coinbase_wallet_sdk)
+A flutter wrapper for CoinbaseWallet mobile SDK
 
-Coinbase Wallet Mobile SDK is an open source SDK which allows you to connect your native mobile applications to millions of Coinbase Wallet users.
+Note: This wrapper only supports iOS and Android.
 
 ## Getting Started
 
-The SDK is available for the following platforms:
+```dart
+  import 'package:coinbase_wallet_sdk/coinbase_wallet_sdk.dart';
 
-- [iOS](https://github.com/coinbase/wallet-mobile-sdk/tree/master/ios)
-- [Android](https://github.com/coinbase/wallet-mobile-sdk/tree/master/android)
-
-Wrapper libraries and modules are also available for the following platforms:
-
-- [React Native](https://github.com/coinbase/wallet-mobile-sdk/tree/master/react-native)
-- [Flutter](https://github.com/coinbase/wallet-mobile-sdk/tree/master/flutter)
-
-For **Install** and **Usage** instructions of each platform, visit the links above or our [developer documentation](https://docs.cloud.coinbase.com/wallet-sdk/docs/mobile-sdk-overview).
-
-## References
-- Coinbase Wallet [Developer Documentation](https://docs.cloud.coinbase.com/wallet-sdk/docs)
-- Questions? Visit our [Developer Forums](https://forums.coinbasecloud.dev/).
-- For bugs, please report an issue on Github.
-
-## License
-
+  // Configure SDK for each platform
+  await CoinbaseWalletSDK.shared.configure(
+    Configuration(
+      ios: IOSConfiguration(
+        host: Uri.parse('https://wallet.coinbase.com/wsegue'),
+        callback: Uri.parse('tribesxyz://mycallback'),
+      ),
+      android: AndroidConfiguration(
+        domain: Uri.parse('https://www.myappxyz.com'),
+      ),
+    ),
+  );
 ```
-Copyright © 2022 Coinbase, Inc. <https://www.coinbase.com/>
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+### iOS only
 
-    http://www.apache.org/licenses/LICENSE-2.0
+```swift
+    override func application(
+      _ app: UIApplication,
+      open url: URL,
+      options: [UIApplication.OpenURLOptionsKey : Any] = [:]
+    ) -> Bool {
+        if (try? CoinbaseWalletSDK.shared.handleResponse(url)) == true {
+            return true
+        }
+        // handle other types of deep links
+        return false
+    }
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+    override func application(
+      _ application: UIApplication,
+      continue userActivity: NSUserActivity,
+      restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void
+    ) -> Bool {
+        if let url = userActivity.webpageURL,
+           (try? CoinbaseWalletSDK.shared.handleResponse(url)) == true {
+            return true
+        }
+        // handle other types of deep links
+        return false
+    }
+```
+
+## Usage
+
+```dart
+  // To call web3's eth_requestAccounts
+  final response = await CoinbaseWalletSDK.shared.initiateHandshake([
+    const RequestAccounts(),
+  ]);
+
+  final walletAddress = response[0].value;
+
+  // to call web3's personalSign
+  final response = await CoinbaseWalletSDK.shared.makeRequest(
+    Request(
+      actions: [
+        PersonalSign(address: address.value, message: message),
+      ],
+    ),
+  );
+
+  final signature = response[0].value;
 ```
